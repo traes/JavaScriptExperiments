@@ -1,0 +1,81 @@
+<html>
+<head>
+<title>Birthday Paradox</title>
+<script>
+
+function randomday()
+{
+	return Math.floor((Math.random() * 365) + 1);
+}
+
+function experiment()
+{
+	var birthdays = [];
+
+	var collision = false;	
+
+	while(!collision)
+	{
+		var birthday = randomday();
+
+
+		for(var i = 0; i < birthdays.length; i++)
+		{
+			if(birthday == birthdays[i])
+			{
+				collision = true;
+				break;
+			}
+		}
+
+		birthdays.push(birthday);
+	}
+
+	return (birthdays.length + 1);
+
+}
+
+function init()
+{
+	var experiments = 1000;
+	var results = [];
+
+	print("==============================================");
+	print("Birthday Paradox Experiment");
+	print("==============================================");
+
+	// print header
+	print("experiment,number of people");
+
+	// run the experiments
+	for(var i = 0; i < experiments; i++)
+	{
+		var count = experiment();
+		results.push(count);
+		print(i + "," + count);
+	}
+
+	// results	
+	print("==============================================");
+	var avg = 0;
+	for(var i = 0; i < results.length; i++)
+	{
+		avg += results[i];
+	}
+	avg = avg / results.length;
+	print("average: " + avg);
+	print("==============================================");
+
+}
+
+function print(x)
+{
+	document.getElementById("output").innerHTML += "<br>" + x;
+}
+
+</script>
+</head>
+<body onload="init()">
+<div id="output"></div>
+</body>
+</html>
