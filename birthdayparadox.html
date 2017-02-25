@@ -3,41 +3,47 @@
 <title>Birthday Paradox</title>
 <script>
 
+// generate a random day (a day is a number from 1 to 365)
 function randomday()
 {
 	return Math.floor((Math.random() * 365) + 1);
 }
 
+// generate random birthdays and count how many people it takes before a collision occurs
 function experiment()
 {
 	var birthdays = [];
 
 	var collision = false;	
 
+	// keep an going till we find a collision
 	while(!collision)
 	{
+		// generate a new birthday
 		var birthday = randomday();
-
-
+		
+		// check if this birthday already exists in the array
 		for(var i = 0; i < birthdays.length; i++)
 		{
+			// birthday already exists
 			if(birthday == birthdays[i])
 			{
 				collision = true;
-				break;
+				break; // break out of the for loop
 			}
 		}
 
+		// add the current birthday
 		birthdays.push(birthday);
 	}
 
-	return (birthdays.length + 1);
-
+	// return the total number of birthdays
+	return (birthdays.length);
 }
 
 function init()
 {
-	var experiments = 1000;
+	var experiments = 1000; // how many times to run the experiment
 	var results = [];
 
 	print("==============================================");
@@ -55,7 +61,7 @@ function init()
 		print(i + "," + count);
 	}
 
-	// results	
+	// calculate the average 
 	print("==============================================");
 	var avg = 0;
 	for(var i = 0; i < results.length; i++)
