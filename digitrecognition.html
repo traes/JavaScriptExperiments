@@ -1,0 +1,115 @@
+<html>
+<head>
+<title>Digit Recognition</title>
+<script>
+
+var global = {};
+
+// determine direction (left,right,up,down) based on start and end coordinates
+function direction(startX,startY,stopX,stopY)
+{
+	var result = "none";
+	var margin = 40;
+
+	var dX = stopX - startX;
+	var dY = stopY - startY;
+
+	if(Math.abs(dX) > margin)
+	{
+		result = (dX > 0) ? "r" : "l";
+	}
+
+	if(Math.abs(dY) > margin)
+	{
+		result = (dY > 0) ? "d" : "u";
+	}
+
+	return result;
+}
+
+
+function init()
+{
+
+	// keep track of the directions of the lines drawn by the user
+	global.lines = [];
+
+	// patterns to check
+	global.patterns = {};
+	global.patterns["d"] = 1;
+	global.patterns["rdldr"] = 2;
+	global.patterns["rdrr"] = 3;
+	global.patterns["drd"] = 4;
+	global.patterns["ldrdl"] = 5;
+	global.patterns["ldrdl"] = 6;
+	global.patterns["rd"] = 7;
+	global.patterns["rddrr"] = 8;
+	global.patterns["rddrl"] = 9;
+	global.patterns["rddr"] = 0;
+
+	// get the canvas and context
+	var canvas = document.getElementById("input");
+	var context = canvas.getContext("2d");
+
+	// mouse clicked
+	canvas.onmousedown = function(e)
+	{
+		// move cursor to new position
+		context.moveTo(e.clientX,e.clientY);
+
+		// keep track of start coordinates
+		global.startX = e.clientX;
+		global.startY = e.clientY;
+
+		// from now on we draw
+		global.drawing = true;
+	}
+
+	// mouse released
+	canvas.onmouseup = function(e)
+	{
+		// stop drawing lines on the screen
+		global.drawing = false;
+
+		// determine the direction of the line
+		var dir = direction(global.startX,global.startY,e.clientX,e.clientY);
+
+		// add the line to the ones that are already drawn
+		global.lines += dir;
+		
+		// recognise the pattern based on the lines
+		var recog = global.patterns[global.lines] || "";
+		printdebug(recog);
+	}
+
+	// mouse moved
+	canvas.onmousemove = function(e)
+	{
+		// only draw a line if the mouse is down
+		if(global.drawing)
+		{
+			// get the coordinates
+			var x = e.clientX;
+			var y = e.clientY;
+
+			// draw the line
+			context.lineTo(x,y);
+			context.stroke();
+		}
+	}
+}
+
+function printdebug(x)
+{
+	document.getElementById("debug").innerHTML = "<h1>" + x + "</h1>";
+}
+
+</script>
+</head>
+<body onload="init()">
+<canvas id="input" width=500 height=500 style="border:1px solid #000000;">
+</canvas>
+<div id="debug"></div><br>
+<div id="output"></div>
+</body>
+</html>
