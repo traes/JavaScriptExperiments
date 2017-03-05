@@ -1,0 +1,108 @@
+<html>
+<head>
+<title>German Tank Problem</title>
+<script>
+
+function estimate(observations)
+{
+	// k: number of observations
+	var k = observations.length;
+
+	// m: maximum observed number
+	var m = Math.max.apply(null,observations); 
+
+	// n: estimated total number
+	var n = m + (m / k) - 1;
+
+	return n;
+}
+
+function init()
+{
+	for(var run = 0; run < 4000; run++)
+	{
+
+		var n = 100; // the correct total number
+		var observations = [];
+
+		// iterate
+		var estimations = [];
+		for(var i = 1; i <= 100; i++)
+		{
+			// generate new observations
+			var obs = Math.floor((Math.random() * n) + 1); // generate random observation
+			observations.push(obs);
+
+			// estimate total number
+			var est = estimate(observations);
+			estimations.push(est);
+
+			// max number
+			var max = Math.max.apply(null,observations);
+		}
+
+		plot(estimations);
+	}
+}
+
+// convert to plot coordinates (X-axis)
+function plot_x(x)
+{
+	var scale_x = 5;
+	return (x * scale_x);
+}
+
+// convert to plot coordinates (Y-axis)
+function plot_y(y)
+{
+	var scale_y = 3;
+	var size_y = 500;
+	return size_y - (y * scale_y);
+}
+
+function plot(estimations)
+{
+	var canvas = document.getElementById("plot");
+	var ctx = canvas.getContext("2d");
+
+
+	// plot the estimations
+	ctx.beginPath();
+	for(var i = 0; i < estimations.length; i++)
+	{
+		var x = plot_x(i);
+		var y = plot_y(estimations[i]);
+
+		ctx.lineTo(x,y);
+	}
+	ctx.strokeStyle = "#0000FF";
+	ctx.stroke();
+
+
+	// plot the correct total number
+	var correct = 100;
+	var max_iterations = 100;
+	ctx.beginPath();
+	ctx.moveTo(plot_x(0),plot_y(correct));
+	ctx.lineTo(plot_x(max_iterations),plot_y(correct));
+	ctx.strokeStyle = "#FF0000";
+	ctx.stroke();
+}
+
+function print(x)
+{
+	document.getElementById("output").innerHTML += "<br>" + x;
+}
+
+</script>
+</head>
+<body onload="init()">
+<b>German Tank Problem</b><br>
+Estimate the total number of tanks based on the number of observations and the maximum observed serial number.
+<br>
+Multiple experiments plotted on the same graph:
+<p>
+<canvas id="plot" width=500 height=500 style="border:1px solid #000000"></canvas>
+<div id="output"></div>
+</body>
+</html>
