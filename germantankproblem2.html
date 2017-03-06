@@ -75,7 +75,7 @@ function plot(estimations)
 
 		ctx.lineTo(x,y);
 	}
-	ctx.strokeStyle = "#0000FF";
+	ctx.strokeStyle = 'rgba(0,0,255,0.02)';
 	ctx.stroke();
 
 
@@ -85,7 +85,7 @@ function plot(estimations)
 	ctx.beginPath();
 	ctx.moveTo(plot_x(0),plot_y(correct));
 	ctx.lineTo(plot_x(max_iterations),plot_y(correct));
-	ctx.strokeStyle = "#FF0000";
+	ctx.strokeStyle = 'rgba(255,0,0,1.0)';
 	ctx.stroke();
 }
 
