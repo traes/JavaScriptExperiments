@@ -1,0 +1,104 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+// draw metro-style map of chinese characters
+
+const xmlns = "http://www.w3.org/2000/svg";
+const size = 40; // size of the circles
+const grid = 50; // size of the grid
+const dist = 75;
+
+const f = Math.sin(Math.PI / 4);
+
+function drawLine(x1,y1,x2,y2,color)
+{
+	var line = document.createElementNS(xmlns,"line");
+	line.setAttributeNS(null,"x1",x1);
+	line.setAttributeNS(null,"y1",y1);
+	line.setAttributeNS(null,"x2",x2);
+	line.setAttributeNS(null,"y2",y2);
+	line.setAttributeNS(null,"stroke",color);
+	line.setAttributeNS(null,"stroke-width",8);
+	return line;
+}
+
+function drawStation(gridx,gridy,color,symbol,connections)
+{
+	var x = grid * gridx;
+	var y = grid * gridy;
+	var group = document.createElementNS(xmlns,"g");
+	group.setAttributeNS(null,"transform","translate(" + x + "," + y +")");
+
+	// draw circle
+	var circle = document.createElementNS(xmlns,"circle");
+	circle.setAttributeNS(null,"r",size);
+	circle.setAttributeNS(null,"stroke",color);
+	circle.setAttributeNS(null,"stroke-width",8);
+	circle.setAttributeNS(null,"fill","white");
+	group.appendChild(circle);
+
+	// draw symbol inside circle
+	var text = document.createElementNS(xmlns,"text");
+	text.setAttributeNS(null,"text-anchor","middle");
+	text.setAttributeNS(null,"dominant-baseline","central");
+	text.setAttributeNS(null,"font-size",50);
+	text.setAttributeNS(null,"font-weight","bold");
+	text.appendChild(document.createTextNode(symbol));
+	group.appendChild(text);
+
+	// add right line
+	/r/.test(connections) && group.appendChild(drawLine(size,0,dist,0,color));
+
+	// add left line
+	/l/.test(connections) && group.appendChild(drawLine(-size,0,-dist,0,color));
+
+	// add up line
+	/u/.test(connections) && group.appendChild(drawLine(0,-size,0,-dist,color));
+
+	// add down line
+	/d/.test(connections) && group.appendChild(drawLine(0,size,0,dist,color));
+
+	// add down right line 
+	/3/.test(connections) && group.appendChild(drawLine(size * f,size * f,dist,dist,color));
+
+	// add down left line 
+	/1/.test(connections) && group.appendChild(drawLine(-size * f,size * f,-dist,dist,color));
+
+	// add up right line	
+	/9/.test(connections) && group.appendChild(drawLine(size * f,-size * f,dist,-dist,color));
+
+	// add up left line 
+	/7/.test(connections) && group.appendChild(drawLine(-size * f,-size * f,-dist,-dist,color));
+
+	document.getElementById("diagram").appendChild(group);
+}
+
+function run()
+{
+	drawStation(1,1,"lightblue","人","rd");
+	drawStation(4,1,"lightblue","大","lrd");
+	drawStation(7,1,"lightblue","天","lr");
+	drawStation(10,1,"lightblue","矢","l");
+	drawStation(1,4,"lightblue","火","u");
+	drawStation(4,4,"lightblue","犬","u");
+	
+	drawStation(1,7,"green","米","3");
+	drawStation(4,7,"green","来","d");
+	drawStation(1,13,"green","禾","9");
+	drawStation(1,10,"green","呆","r");
+	drawStation(4,10,"green","木","ul71dr9");
+	drawStation(7,7,"green","休","1r");
+	drawStation(10,7,"green","体","l");
+	drawStation(7,10,"green","林","lr");
+	drawStation(10,10,"green","森","l");
+	drawStation(4,13,"green","本","u");
+}
+
+</script>
+</head>
+<body onload="run()">
+<svg id="diagram" width=2000 height=2000></svg>
+</body>
+</html>
