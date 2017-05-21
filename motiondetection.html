@@ -1,0 +1,94 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function run()
+{
+	// request access to video
+	navigator.mozGetUserMedia({video:true},initVideo,console.log);
+}
+
+// called when GetUserMedia succeeds
+function initVideo(stream)
+{
+	// set video source to webcam
+	document.getElementById("video").src = window.URL.createObjectURL(stream);
+
+	// motion detection
+	detect();
+}
+
+function detect()
+{
+	// video
+	var video = document.getElementById("video");
+
+	// canvasses
+	var previous = document.getElementById("previous").getContext("2d");
+	var current = document.getElementById("current").getContext("2d");
+	var motion = document.getElementById("motion").getContext("2d");
+
+	// copy video to canvas
+	current.drawImage(video,0,0,800,600);
+
+	// copy current to motion
+	motion.drawImage(document.getElementById("current"),0,0);
+
+	// keep track of total change
+	var totalchange = 0;
+
+	// check pixel colors
+	var size = 10;
+	for(var x = 0; x < 800; x += size)
+	{
+		for(var y = 0;y < 600; y += size)
+		{
+			// get pixel color
+			var a = previous.getImageData(x,y,1,1).data;
+			var b = current.getImageData(x,y,1,1).data;
+
+			// get difference between pixel in current and previous frame
+			var diff = 0;
+			diff += Math.abs(b[0] - a[0]);
+			diff += Math.abs(b[1] - a[1]);
+			diff += Math.abs(b[2] - a[2]);
+
+			// check if pixel has changed
+			if(diff > 75)
+			{
+				// count number of changes
+				totalchange += 1;
+		
+				// indicate changed area on image
+				motion.strokeStyle = "#00FF00";
+				motion.strokeRect(x,y,size,size);
+			}
+		}
+	}
+
+	// print total change
+	print("total change: " + totalchange);
+
+	// copy current to previous
+	previous.drawImage(document.getElementById("current"),0,0);
+
+	// repeat
+	setTimeout(detect,0);
+}
+
+function print(x)
+{
+	document.getElementById("print").innerHTML = x;
+}
+
+</script>
+</head>
+<body onload="run()">
+<video id="video" autoplay hidden></video>
+<canvas id="motion" width=800 height=600></canvas>
+<canvas id="previous" width=800 height=600 hidden></canvas>
+<canvas id="current" width=800 height=600 hidden></canvas>
+<div id="print"></div>
+</body>
+</html>
