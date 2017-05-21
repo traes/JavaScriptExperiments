@@ -1,0 +1,40 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function run()
+{
+	// put cursor focus on input field when page loads
+	document.getElementById("input").focus();
+}
+
+function speakclicked()
+{
+	var input = document.getElementById("input");
+
+	// get text from from
+	var text = input.value;
+
+	// clear input field in form
+	input.value = "";
+
+	// speak the text
+	speak(text);
+	
+	// focus on the input field
+	input.focus();
+}
+
+function speak(msg)
+{
+	window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+}
+
+</script>
+</head>
+<body onload="run()">
+<input type="text" id="input"></input>
+<button onclick="speakclicked()">Speak</button>
+</body>
+</html>
