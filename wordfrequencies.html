@@ -1,0 +1,48 @@
+<html>
+<head>
+<meta charset="UTF-8"/>
+<script>
+"use strict";
+
+var dict = {};
+
+function change()
+{
+	var file = document.getElementById("input").files[0];
+	var reader = new FileReader();
+
+	// execute when file read
+	reader.onload = function(event)
+	{
+		// transfer text in list of words
+		var words = reader.result.split(" ").map(x => x.toLowerCase());
+
+		// count the occurences of each word
+		words.map(w => dict[w] = (dict[w] + 1) || 1);
+
+		// get list of words
+		var keys = Object.keys(dict);
+
+		// sort based on count
+		keys = keys.sort(function(a,b) {return dict[b] - dict[a]});
+
+		// show 100 most common words
+		keys.slice(0,100).map(x => print(x));
+	}
+
+	// read the file
+	reader.readAsText(file);
+}
+
+function print(x)
+{
+	document.getElementById("output").innerHTML += "<br>" + x;
+}
+
+</script>
+</head>
+<body>
+<input id="input" type="file" onchange="change()"/>
+<div id="output"></div>
+</body>
+</html>
