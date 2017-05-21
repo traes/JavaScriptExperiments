@@ -1,0 +1,108 @@
+<html>
+<head>
+<script>
+
+// test program to detect a red object in the video stream
+
+function run()
+{
+	// request access to video
+	navigator.mozGetUserMedia({video:true},initVideo,console.log);
+}
+
+// called when GetUserMedia succeeds
+function initVideo(stream)
+{
+	// set video source to webcam
+	document.getElementById("video").src = window.URL.createObjectURL(stream);
+
+	// start detection red pen orientation
+	detect();
+}
+
+function detect()
+{
+	var context = document.getElementById("detection").getContext("2d");
+	var video = document.getElementById("video");
+
+	// detection results
+	var minx = 800;
+	var miny = 600;
+	var maxx = 0;
+	var maxy = 0;
+	var detected = false;
+	
+	// copy video to canvas
+	context.drawImage(video,0,0,800,600);
+
+	// check pixel colors
+	var size = 5;
+	for(var x = 0; x < 800; x += size)
+	{
+		for(var y = 0;y < 600; y += size)
+		{
+			// get pixel color
+			var pixel = context.getImageData(x,y,1,1).data;
+			var red = pixel[0];
+			var green = pixel[1];
+			var blue = pixel[2];
+
+			// check if pixel is red
+			if(red > 100 && (red/3 > green) && (red/3 > blue))
+			{
+				minx = (x < minx) ? x : minx;
+				maxx = (x > maxx) ? x : maxx;
+				miny = (y < miny) ? y : miny;
+				maxy = (y > maxy) ? y : maxy;
+				
+				detected = true;
+			}
+		
+		}
+	}
+
+	// get orientation
+	var dx = maxx - minx;
+	var dy = maxy - miny;
+
+	if(detected)
+	{
+		if(dx/2 > dy)
+		{
+			print("horizontal");
+		}
+		else if(dy/2 > dx)
+		{
+			print("vertical");
+		}
+		else
+		{
+			print("");
+		}
+	}
+	else
+	{
+		print("");
+	}
+
+	// draw rectangle
+	context.strokeStyle = "#00FF00";
+	context.strokeRect(minx,miny,dx,dy);
+
+	// repeat
+	setTimeout(detect,0);
+}
+
+function print(x)
+{
+	document.getElementById("print").innerHTML = x;
+}
+
+</script>
+</head>
+<body onload="run()">
+<video id="video" autoplay hidden></video>
+<canvas id="detection" width=800 height=600></canvas>
+<div id="print"></div>
+</body>
+</html>
