@@ -1,0 +1,457 @@
+<html>
+<head>
+<title>JsFlight</title>
+<script>
+	
+// --- Globals --- //
+
+var range_km = 50;
+var range_pixels = 600;
+
+// --- Math --- //
+
+function rad(degrees)
+{
+	return (degrees * Math.PI / 180);
+}
+
+function deg(radians)
+{
+	var result = (radians * 180 / Math.PI);
+	if(result < 0) 
+	{
+		result += 360;
+	}
+	return result;
+}
+
+// degree notation in deg,min,sec to decimal degrees
+function degnot(d,m,s)
+{
+	return (d + m / 60 + s / 3600);
+}
+
+
+// --- Geographical --- //
+
+function pos(lat,lon)
+{
+	var result = {};
+	result.lat = lat;
+	result.lon = lon;
+
+	result.str = function()
+	{
+		return "(" + result.lat + "," + result.lon + ")";
+	};
+
+	result.dist = function(other)
+	{
+		var lat1 = rad(result.lat);
+		var lon1 = rad(result.lon);
+		var lat2 = rad(other.lat);
+		var lon2 = rad(other.lon);
+		var dlat = lat2 - lat1;
+		var dlon = lon2 - lon1;
+		var x = Math.pow(Math.sin(dlat / 2),2);
+		var z = Math.pow(Math.sin(dlon / 2),2);
+		var y = Math.cos(lat1) * Math.cos(lat2);
+		var a = x + y * z;
+		var sqa = Math.sqrt(a);
+		var sqm = Math.sqrt(1 - a);
+		var c = 2 * Math.atan2(sqa,sqm);
+		var d = 6371 * c;
+		return d;
+	};
+
+	result.bearing = function(other)
+	{
+		var lat1 = rad(result.lat);
+		var lon1 = rad(result.lon);
+		var lat2 = rad(other.lat);
+		var lon2 = rad(other.lon);
+		var dlat = lat2 - lat1;
+		var dlon = lon2 - lon1;
+		var y = Math.sin(dlon) * Math.cos(lat2);
+		var x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dlon);
+		var b  = Math.atan2(y,x);
+		return deg(b);
+	};
+
+	result.move = function(angle,distance)
+	{
+		var r = 6371;	
+
+		var lat = rad(result.lat);
+		var lon = rad(result.lon);
+		var brng = rad(angle);
+
+		var lat2 = Math.asin(Math.sin(lat)*Math.cos(distance / r) + Math.cos(lat) * Math.sin(distance / r) * Math.cos(brng));
+		var lon2 = lon + Math.atan2(Math.sin(brng) * Math.sin(distance / r) * Math.cos(lat),Math.cos(distance / r) - Math.sin(lat) * Math.sin(lat2));
+
+		result.lat = deg(lat2);
+		result.lon = deg(lon2);
+	}
+
+	return result;
+}
+
+// --- Beacons --- //
+
+function vor(name,freq,lat,lon)
+{
+	var result = {};
+	result.type = "VOR";
+	result.name = name;
+	result.freq = freq;
+	result.pos = pos(lat,lon);
+	return result;
+}
+
+function intersection(name,lat,lon)
+{
+	var result = {};
+	result.type = "INT";
+	result.name = name;
+	result.pos = pos(lat,lon);
+	return result;
+}
+
+function rwy(airport,name,beginlat,beginlon,endlat,endlon)
+{
+	var result = {};
+	result.airport = airport;
+	result.name = name;
+	result.beginpos = pos(beginlat,beginlon);
+	result.endpos = pos(endlat,endlon);
+	return result;
+}
+
+var navaids = {};
+
+// Intersections
+var intersections = [];
+intersections.push(intersection("MEDIL",degnot(50,20,31.72),degnot(3,40,29.89)));
+intersections.push(intersection("DISAK",degnot(48,08,0),degnot(2,07,54)));
+intersections.push(intersection("DEPOM",degnot(47,19,04),degnot(2,10,45)));
+intersections.push(intersection("DIRMO",degnot(47,05,21),degnot(2,11,32)));
+intersections.push(intersection("GUERE",degnot(46,11,24),degnot(2,5,22)));
+intersections.push(intersection("GIRAK",degnot(44,38,52),degnot(1,48,38)));
+intersections.push(intersection("NARAK",degnot(44,17,43),degnot(1,44,56)));
+intersections.push(intersection("LOMRA",degnot(43,20,39),degnot(1,52,59)));
+intersections.push(intersection("ROCAN",degnot(42,40,24),degnot(1,56,48)));
+intersections.push(intersection("PUMAL",degnot(42,22,0.5),degnot(2,00,30.5)));
+
+// temp hack: add airports as intersections
+intersections.push(intersection("LEBL",degnot(41,17,49),degnot(2,4,42)));
+intersections.push(intersection("EBBR",degnot(50,54,46.05),degnot(4,30,12.21)));
+
+for(var i = 0; i < intersections.length; i++)
+{
+	var intersection = intersections[i];
+	navaids[intersection.name] = intersection;
+}
+
+
+
+// VOR's
+var vors = [];
+vors.push(vor("AFI","114.9",50.907778,4.138889));
+vors.push(vor("ANT","113.5",51.190556,4.472500));
+vors.push(vor("BUN","110.6",51.118611,4.841944));
+vors.push(vor("BUB","114.6",50.902222,4.538056));
+vors.push(vor("CIV","113.2",50.573889,3.832778));
+vors.push(vor("COA","110.05",51.348056,3.355278));
+vors.push(vor("FLO","112.05",50.876667,5.134444));
+vors.push(vor("GSY","115.7",50.453889,4.441389));
+vors.push(vor("HUL","117.55",50.749444,4.641667));
+vors.push(vor("KOK","114.5",51.094722,2.651667));
+vors.push(vor("LGE","115.45",50.653889,5.470556));
+vors.push(vor("NIK","117.4",51.165000,4.183889));
+vors.push(vor("LNO","112.8",50.585833,5.710278));
+vors.push(vor("SPI","113.1",50.514722,5.623333));
+vors.push(vor("GAI","115.8",degnot(43,57,14.56),degnot(1,49,27.03)));
+
+for(var i = 0; i < vors.length; i++)
+{
+	var vor = vors[i];
+	navaids[vor.name] = vor;
+}
+
+
+var runways = [];
+runways.push(rwy("EBBR","07L-25R",degnot(50,53,55.92),degnot(4,27,20.30),degnot(50,54,46.05),degnot(4,30,12.21)));
+runways.push(rwy("EBBR","07R-25L",degnot(50,53,20.54),degnot(4,28,49.41),degnot(50,53,56.81),degnot(4,31,26.63)));
+runways.push(rwy("EBBR","02-20",degnot(50,53,12.50),degnot(4,29,28.85),degnot(50,54,47.06),degnot(4,30,7.38)));
+runways.push(rwy("EBAW","11-29",degnot(51,11,32.56),degnot(4,27,9.94),degnot(51,11,16.05),degnot(4,28,22.95)));
+runways.push(rwy("EBOS","08-26",degnot(51,11,48.39),degnot(2,51,10.12),degnot(51,12,10.75),degnot(2,53,51.09)));
+runways.push(rwy("LEBL","07L-25R",degnot(41,17,32.99),degnot(2,3,54.4),degnot(41,18,20.61),degnot(2,6,13.42)));
+runways.push(rwy("LEBL","07R-25L",degnot(41,16,56.33),degnot(2,4,27.66),degnot(41,17,31.99),degnot(2,6,11.8)));
+runways.push(rwy("LEBL","02-20",degnot(41,17,15.98),degnot(2,5,5.42),degnot(41,18,33.83),degnot(2,5,40.94)));
+
+// --- Drawing --- //
+
+function scale(distance)
+{
+	var scaling = (range_pixels / range_km);
+	return distance * scaling;
+}
+
+function drawpos(center,position)
+{
+	var anglerad = rad(center.bearing(position) - 90);
+	var distance = scale(center.dist(position));
+
+	var result = {};
+	result.x = Math.cos(anglerad) * distance;
+	result.y = Math.sin(anglerad) * distance;
+
+	result.x += range_pixels / 2;
+	result.y += range_pixels / 2;
+
+	return result;
+}
+
+function drawtext(center,textpos,text)
+{
+	var c = document.getElementById("map");
+	var ctx = c.getContext("2d");
+
+	ctx.font = "15px Arial";
+	var position = drawpos(center,textpos);
+	ctx.fillText(text,position.x,position.y);
+	
+}
+
+function drawline(center,pos1,pos2)
+{
+	var c = document.getElementById("map");
+	var ctx = c.getContext("2d");
+
+	var draw1 = drawpos(center,pos1);
+	var draw2 = drawpos(center,pos2);
+
+	ctx.moveTo(draw1.x,draw1.y);
+	ctx.lineTo(draw2.x,draw2.y);
+	ctx.stroke();
+}
+
+function drawairplane(center,angle)
+{
+	var c = document.getElementById("map");
+	var ctx = c.getContext("2d");
+
+
+	var middle = range_pixels / 2;
+	var size = 10;
+
+	ctx.save();
+	ctx.translate(middle,middle);
+	ctx.rotate(rad(angle));
+	
+	// horizontal line
+	ctx.moveTo(-size,0);
+	ctx.lineTo(size,0);
+	ctx.stroke();
+
+	// vertical line
+	ctx.moveTo(0,-size);
+	ctx.lineTo(0,size);
+	ctx.stroke();
+
+	// tail
+	ctx.moveTo(0 - (size / 2),size);
+	ctx.lineTo(size / 2,size);
+	ctx.stroke();
+
+	ctx.restore();
+}
+
+function drawcircle(center,pos1,range)
+{
+	var c = document.getElementById("map");
+	var ctx = c.getContext("2d");
+
+	var draw1 = drawpos(center,pos1);
+
+	ctx.beginPath();
+	ctx.arc(draw1.x,draw1.y,range,0,2 * Math.PI);
+	ctx.stroke();
+}
+
+function drawclear()
+{
+
+	var c = document.getElementById("map");
+	var ctx = c.getContext("2d");
+	ctx.clearRect(0,0,range_pixels,range_pixels);
+	ctx.beginPath();
+}
+
+function drawadf(angle)
+{
+	var c = document.getElementById("adf");
+	var ctx = c.getContext("2d");
+
+	ctx.clearRect(0,0,100,100);
+
+
+	var middle = 100 / 2;
+
+
+	ctx.beginPath();
+	ctx.arc(middle,middle,middle,0,2 * Math.PI);
+	ctx.stroke();
+
+	ctx.save();
+	ctx.translate(middle,middle);
+	ctx.rotate(rad(angle));
+
+	ctx.beginPath();
+	ctx.moveTo(0,0);
+	ctx.lineTo(0,-middle * 0.9);
+	ctx.stroke();
+
+
+	ctx.restore();
+
+}
+
+
+// --- System --- //
+
+function print(message)
+{
+	document.getElementById("output").innerHTML += "<br>" + message;
+}
+
+function draw(center)
+{
+	drawclear();
+
+	// draw vor's
+	for(var i = 0; i < vors.length; i++)
+	{
+		var x = vors[i];
+		drawcircle(center,x.pos,2);
+		drawtext(center,x.pos,x.name);
+	}
+
+	// draw intersections
+	for(var i = 0; i < intersections.length; i++)
+	{
+		var x = intersections[i];
+		drawcircle(center,x.pos,2);
+		drawtext(center,x.pos,x.name);
+	}
+
+
+	// draw runways
+	for(var i = 0; i < runways.length; i++)
+	{
+		var x = runways[i];
+		drawline(center,x.beginpos,x.endpos);
+	}
+
+	// airplane symbol
+	drawairplane(center,aircraft.heading);
+}
+	
+
+
+var aircraft = pos(50.902222,4.538056);
+aircraft.heading = 0;
+aircraft.airspeed = 0.025;
+
+var flightplan = ["CIV","MEDIL","DISAK","DIRMO","NARAK","LOMRA","ROCAN","PUMAL","LEBL"];
+var flightplan_index = 0;
+
+function iteration()
+{
+	var waypoint_name = flightplan[flightplan_index];
+	var waypoint = navaids[waypoint_name].pos;
+
+	if(aircraft.dist(waypoint) < 1.0)
+	{
+		flightplan_index += 1;
+		if(flightplan_index >= flightplan.length)
+		{
+			flightplan_index = 0;
+		}
+	}
+
+	var adf_heading = aircraft.bearing(waypoint); 
+	drawadf(adf_heading);
+
+	aircraft.move(aircraft.heading,aircraft.airspeed);
+	draw(aircraft);
+
+}
+function main()
+{
+	setInterval(iteration,10);
+}
+
+function printdebug(x)
+{
+	document.getElementById("debuglat").innerHTML = x.lat;
+	document.getElementById("debuglon").innerHTML = x.lon;
+}
+
+function left()
+{
+	aircraft.heading -= 10;
+	if(aicraft.heading < 0)
+	{
+		aircraft.heading += 360;
+	}
+}
+
+function right()
+{
+	aircraft.heading += 10;
+	if(aircraft.heading > 360)
+	{
+		aircraft.heading -= 360;
+	}
+}
+
+window.onkeydown = function(event)
+{
+	if(event.key == "ArrowLeft")
+	{
+		left();
+	}
+	if(event.key == "ArrowRight")
+	{
+		right();
+	}
+	if(event.key == "ArrowUp")
+	{
+		aircraft.airspeed += 0.005;
+	}
+	if(event.key == "ArrowDown")
+	{
+		aircraft.airspeed -= 0.005;
+		if(aircraft.airspeed < 0)
+		{
+			aircraft.airspeed = 0;
+		}
+	}
+
+}
+
+</script>
+</head>
+<body onload="main()">
+<canvas id=map width=600 height=600 style="border:1px solid #000000;"></canvas>
+<p>
+<canvas id=left onclick="left()" width=300 height=50 style="border:1px solid #000000;"></canvas>
+<canvas id=right onclick="right()" width=300 height=50 style="border:1px solid #000000;"></canvas>
+<br>
+<canvas id=adf width="100" height="100"></canvas>
+<div id=debuglat></div>
+<div id=debuglon></div>
+<div id=output></div>
+</body>
+</html>
