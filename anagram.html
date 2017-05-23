@@ -1,0 +1,81 @@
+<!-- Script to find anagrams -->
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+// store list of words here
+var words = [];
+
+// initialize
+function init(dictname)
+{
+	// read the word list
+	var client = new XMLHttpRequest();	
+	client.onreadystatechange = function()
+	{
+		// check if reading complete
+		if(client.readyState === XMLHttpRequest.DONE)
+		{
+			// convert each line into an entry
+			words = client.response.split("\n");
+
+			// log how many words we've loaded
+			console.log("loaded " + words.length + " words from " + dictname);
+		}
+	}
+
+	// get the words from the dictionary file
+	client.open('GET',dictname);
+	client.send();
+}
+
+function process()
+{
+	// get input word
+	var word = document.getElementById("word").value;
+
+	// clear input field
+	document.getElementById("word").value = "";
+
+	// clear previous output 
+	clear();
+
+	// begin of output
+	print("---------------------------------------");
+
+	// look for anagrams
+	var sorted = word.split("").sort().join("");
+	for(var i = 0; i < words.length; i++)
+	{
+		var x = words[i];
+		if((x.split("").sort().join("") == sorted) && x != word)
+		{
+			print(x);
+		}
+	}
+
+	// end of output
+	print("---------------------------------------");
+}
+
+// print output
+function print(x)
+{
+	document.getElementById("print").innerHTML += "<br>" + x;
+}
+
+// clear output
+function clear()
+{
+	document.getElementById("print").innerHTML = "";
+}
+
+</script>
+</head>
+<body onload="init('words.txt')">
+<input type="text" id="word"></input>
+<button onclick="process()">Search</button>
+<div id="print"></div>
+</body>
+</html>
