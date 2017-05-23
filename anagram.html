@@ -12,6 +12,7 @@ function init(dictname)
 {
 	// read the word list
 	var client = new XMLHttpRequest();	
+	client.responseType = "text";
 	client.onreadystatechange = function()
 	{
 		// check if reading complete
