@@ -1,0 +1,79 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+var wordlist = [];
+var scores = {};
+
+function score(a,b)
+{
+	var result = 0;
+
+	// compare letters
+	for(var i = 0;i < a.length && i < b.length; i++)
+	{
+		if(a[i] == b[i])
+		{
+			result += 1;
+		}
+	}
+
+	return result;
+}
+
+function process()
+{
+	// get target word
+	var word = document.getElementById("word").value;
+	document.getElementById("word").value = "";
+	document.getElementById("word").focus();
+	
+	// clear output	
+	clear();
+
+	// calculate scores
+	wordlist.forEach((x) => scores[x] = score(word,x));
+
+	// sort results
+	var results = wordlist.sort((a,b) => scores[b] - scores[a]);
+
+	// show output
+	results.slice(0,20).sort((a,b) => a.length - b.length).forEach(print);
+}
+
+function init()
+{
+	var xhr = new XMLHttpRequest();
+	xhr.responseType = "text";
+	xhr.onreadystatechange = function()
+	{
+		if(xhr.readyState == XMLHttpRequest.DONE)
+		{
+			wordlist = xhr.response.split("\n");
+			console.log("loaded " + wordlist.length + " words");
+		}
+	}
+
+	xhr.open("GET","words.txt");
+	xhr.send();
+}
+
+function print(x)
+{
+	document.getElementById("print").innerHTML += "<br>" + x;
+}
+
+function clear()
+{
+	document.getElementById("print").innerHTML = "";
+}
+
+</script>
+</head>
+<body onload="init()">
+<input type="text" id="word"></input>
+<button onclick="process()">Search</button>
+<div id="print"></div>
+</body>
+</html>
