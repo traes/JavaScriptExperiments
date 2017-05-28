@@ -3,13 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <script>
+"use strict";
 
 // store list of words here
 var words = [];
 
+// lookup: alphabetical word -> [word,word,word,...]
+var lookup = {};
+
 // initialize
 function init(dictname)
 {
+	print("loading dictionary...");
+
 	// read the word list
 	var client = new XMLHttpRequest();	
 	client.responseType = "text";
@@ -21,8 +27,27 @@ function init(dictname)
 			// convert each line into an entry
 			words = client.response.split("\n");
 
+			// add word to lookup table
+			for(var i = 0; i < words.length; i++)
+			{
+				// get current word
+				var word = words[i];
+
+				// sort the letters alphabetically
+				var sorted = word.split("").sort().join("");
+
+				// if sorted word not in loopup table, initialize to empty list
+				lookup[sorted] = lookup[sorted] || [];
+
+				// add word to entry in lookup table
+				lookup[sorted].push(word);
+			}	
+			
 			// log how many words we've loaded
 			console.log("loaded " + words.length + " words from " + dictname);
+
+			// enable the search button
+			print("ready");
 		}
 	}
 
@@ -35,6 +60,7 @@ function process()
 {
 	// get input word
 	var word = document.getElementById("word").value;
+	var sorted = word.split("").filter((x) => x != " ").sort().join("");
 
 	// clear input field
 	document.getElementById("word").value = "";
@@ -42,23 +68,87 @@ function process()
 	// clear previous output 
 	clear();
 
-	// begin of output
-	print("---------------------------------------");
+	// keep track of which words we already have shown
+	var shown = {};
 
-	// look for anagrams
-	var sorted = word.split("").sort().join("");
-	for(var i = 0; i < words.length; i++)
+	// check if whole word in lookup table
+	var anagrams = lookup[sorted];
+	if(anagrams && anagrams.length > 0)
 	{
-		var x = words[i];
-		if((x.split("").sort().join("") == sorted) && x != word)
+		// run through list of anagrams for this word
+		for(var i = 0; i < anagrams.length; i++)
 		{
-			print(x);
+			// get current anagram
+			var anagram = anagrams[i];
+
+			// check whether it is different from the target word and not shown yet
+			if(anagram != word && !(anagram in shown))
+			{
+				// show the anagram
+				print(anagram);
+
+				// mark this word as already shown
+				shown[anagram] = true;
+			}
 		}
 	}
 
-	// end of output
-	print("---------------------------------------");
+	// run through all sorted words in the lookup table
+	for(var candidate in lookup)
+	{
+		// check if the candidate word is a subset of our word
+		var remaining = subword(candidate,sorted);
+
+		// if so, check if the remaining letters also occur in the lookup table
+		if((remaining != false) && (remaining in lookup) && !(remaining in shown) && !(candidate in shown))
+		{
+			// print all words for the first and second part
+			print(lookup[candidate].join("/") + " " + lookup[remaining].join("/"));
+
+			// note that we have already shown these words
+			shown[candidate] = true;
+			shown[remaining] = true;
+		}
+	}
 }
+
+// subword("def","abcdef") => "aef"
+// subword("xyz","abcdef") => false
+function subword(sub,whole)
+{
+	var remaining = whole; // keep track of remaining chars
+	var subchars = sub.split(""); // get list of required chars
+
+	// run throug all required chars
+	for(var i = 0; i < subchars.length && remaining != false; i++)
+	{
+		// get current char
+		var c = subchars[i];
+
+		// check if it is still in the remaining chars
+		if(remaining.indexOf(c) != -1)
+		{
+			// remove from remaining chars
+			remaining = remaining.replace(c,'');
+		}
+		else
+		{
+			// required char did not occur, no subword
+			remaining = false;
+		}
+	}
+
+	// check if we have found a subword
+	if(remaining != false)
+	{
+		// sort the remaining chars alphabetically
+		remaining = remaining.split("").sort().join("");
+	}
+
+	// return false or the sorted remaining chars
+	return remaining;
+}
+
 
 // print output
 function print(x)
