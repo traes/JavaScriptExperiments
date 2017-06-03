@@ -1,0 +1,129 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+"use strict";
+
+// store list of words here
+var words = [];
+
+// lookup: alphabetical word -> [word,word,word,...]
+var lookup = {};
+
+// decode string to number
+
+var encoding = {};
+encoding['l'] = '0';
+encoding['n'] = '1';
+encoding['t'] = '2';
+encoding['d'] = '3';
+encoding['r'] = '4';
+encoding['f'] = '5';
+encoding['s'] = '6';
+encoding['p'] = '7';
+encoding['k'] = '8';
+encoding['g'] = '9';
+
+function decode(input)
+{
+	var result = "";
+	input.split("").forEach((x) => (x in encoding) ? result += encoding[x] : null);
+	return result;
+}
+
+// initialize
+function init(dictname)
+{
+	print("loading dictionary...");
+
+	// read the word list
+	var client = new XMLHttpRequest();	
+	client.responseType = "text";
+	client.onreadystatechange = function()
+	{
+		// check if reading complete
+		if(client.readyState === XMLHttpRequest.DONE)
+		{
+			// convert each line into an entry
+			words = client.response.split("\n");
+
+			// add word to lookup table
+			for(var i = 0; i < words.length; i++)
+			{
+				// get current word
+				var word = words[i];
+
+				// sort the letters alphabetically
+				var nbr = decode(word);
+
+				// if sorted word not in loopup table, initialize to empty list
+				lookup[nbr] = lookup[nbr] || [];
+
+				// add word to entry in lookup table
+				lookup[nbr].push(word);
+			}	
+			
+			// log how many words we've loaded
+			console.log("loaded " + words.length + " words from " + dictname);
+
+			// enable the search button
+			print("ready");
+		}
+	}
+
+	// get the words from the dictionary file
+	client.open('GET',dictname);
+	client.send();
+}
+
+function process()
+{
+	// get input word
+	var nbr = document.getElementById("word").value;
+
+	// clear input field
+	document.getElementById("word").value = "";
+
+	// clear previous output 
+	clear();
+
+	// keep track of which words we already have shown
+	var shown = {};
+
+	// check if whole word in lookup table
+	var encodings = lookup[nbr];
+	if(encodings && encodings.length > 0)
+	{
+		// run through list of anagrams for this word
+		for(var i = 0; i < encodings.length; i++)
+		{
+			// get current anagram
+			var encoding = encodings[i];
+
+			print(encoding);
+		}
+	}
+
+	print("--- done ---");
+}
+
+// print output
+function print(x)
+{
+	document.getElementById("print").innerHTML += "<br>" + x;
+}
+
+// clear output
+function clear()
+{
+	document.getElementById("print").innerHTML = "";
+}
+
+</script>
+</head>
+<body onload="init('words.txt')">
+<input type="text" id="word"></input>
+<button onclick="process()">Search</button>
+<div id="print"></div>
+</body>
+</html>
