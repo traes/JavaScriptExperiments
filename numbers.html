@@ -11,7 +11,6 @@ var words = [];
 var lookup = {};
 
 // decode string to number
-
 var encoding = {};
 encoding['l'] = '0';
 encoding['n'] = '1';
@@ -47,11 +46,17 @@ function init(dictname)
 			// convert each line into an entry
 			words = client.response.split("\n");
 
+			// filter out short words
+			words = words.filter((x) => x.length > 1);
+
 			// add word to lookup table
 			for(var i = 0; i < words.length; i++)
 			{
 				// get current word
 				var word = words[i];
+
+				// convert word to lowercase
+				word = word.toLowerCase();
 
 				// sort the letters alphabetically
 				var nbr = decode(word);
@@ -62,7 +67,7 @@ function init(dictname)
 				// add word to entry in lookup table
 				lookup[nbr].push(word);
 			}	
-			
+
 			// log how many words we've loaded
 			console.log("loaded " + words.length + " words from " + dictname);
 
@@ -87,24 +92,57 @@ function process()
 	// clear previous output 
 	clear();
 
-	// keep track of which words we already have shown
-	var shown = {};
-
-	// check if whole word in lookup table
-	var encodings = lookup[nbr];
-	if(encodings && encodings.length > 0)
+	// check if number in lookup table
+	if(nbr in lookup)
 	{
-		// run through list of anagrams for this word
-		for(var i = 0; i < encodings.length; i++)
-		{
-			// get current anagram
-			var encoding = encodings[i];
+		// show all words that match the number
+		lookup[nbr].forEach(print);
+	}
 
-			print(encoding);
+	// check if combination of two words in lookup table
+	for(var candidate in lookup)
+	{
+		// get the remainder (if it exists)
+		var remainder = getRemainder(nbr,candidate);
+
+		// check if remainder exists and is in the lookup table
+		if(remainder && (remainder in lookup))
+		{
+			// limit the number of words for each part
+			const limit = 10;
+
+			// get the mnemonics for the candidate
+			var first = getShortest(lookup[candidate],limit);
+
+			// get the mnemonics for the remainder 
+			var second = getShortest(lookup[remainder],limit);
+
+			// show combination
+			print(first.join("/") + " " + second.join("/"));
 		}
 	}
 
 	print("--- done ---");
+}
+
+// return n shortest elements
+function getShortest(list,n)
+{
+	return list.sort((a,b) => a.length - b.length).slice(0,n);
+}
+
+// getRemainder("12345678","123") -> "45678"
+// getRemainder("12345678","42") -> false
+function getRemainder(target,candidate)
+{
+	var remainder = false;
+
+	if(target.indexOf(candidate) === 0)
+	{
+		remainder = target.slice(candidate.length);
+	}
+
+	return remainder;
 }
 
 // print output
@@ -121,7 +159,7 @@ function clear()
 
 </script>
 </head>
-<body onload="init('words.txt')">
+<body xxxonload="test()" onload="init('words.txt')">
 <input type="text" id="word"></input>
 <button onclick="process()">Search</button>
 <div id="print"></div>
