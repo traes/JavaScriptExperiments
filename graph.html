@@ -1,0 +1,143 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+// --- global variables --- //
+
+// network description
+var lines = {}; // line name => [station,station,station,...]
+var edges = {}; // station name => [station,station,...]
+
+// search
+var paths = [];  // [[station,station,...],[station,station,...],...]
+var from; // station name of starting point
+var to; // station name of destination
+
+
+// --- create lines --- //
+
+// line 1
+lines["1 stokkel"] = ["weststation","beekkant","zwarte vijvers","graaf van vlaanderen","sint-katelijne","de brouckere","centraal station","park","kunst-wet","maalbeek","schuman","merode","montgomery","josephine-charlotte","gribaumont","tomberg","roodebeek","vandervelde","alma","kraainem","stokkel"];
+lines["1 weststation"] = lines["1 stokkel"].slice().reverse();
+
+// line 2
+lines["2 elisabeth"] = ["simonis","ossegem","beekkant","weststation","delacroix","clemenceau","zuidstation","hallepoort","munthof","louiza","naamsepoort","troon","kunst-wet","madou","kruidtuin","rogier","ijzer","ribaucourt","elisabeth"];
+lines["2 simonis"] = lines["2 elisabeth"].slice().reverse();
+
+// line 5
+lines["5 hermann-debroux"] = ["erasmus","eddy merckx","coovi","het rad","bizet","veeweide","sint-guido","aumale","jacques brel","weststation","beekkant","zwarte vijvers","graaf van vlaanderen","sint-katelijne","de brouckere","centraal station","park","kunst-wet","maalbeek","schuman","merode","thieffry","petillon","hankar","delta","beaulieu","demey","hermann-debroux"];
+lines["5 erasmus"] = lines["5 hermann-debroux"].slice().reverse();
+
+// line 6
+lines["6 elisabeth"] = ["koning boudewijn","heizel","houba-brugmann","stuyvenbergh","bockstael","pannenhuis","belgica","simonis","ossegem","beekkant","weststation","delacroix","clemenceau","zuidstation","hallepoort","munthof","louiza","naamsepoort","troon","kunst-wet","madou","kruidtuin","rogier","ijzer","ribaucourt","elisabeth"];
+lines["6 koning boudewijn"] = lines["6 elisabeth"].slice().reverse();
+
+
+// --- create edges --- //
+
+for(linename in lines)
+{
+        var stations = lines[linename];
+        for(var i = 0; i < stations.length - 1; i++)
+        {
+                // get from and to stations
+                var from = stations[i];
+                var to = stations[i + 1];
+
+                // initialize if not already exists
+                edges[from] = edges[from] || [];
+
+                // add edge under from station
+                if(edges[from].indexOf(to) < 0)
+                {
+                        edges[from].push(to);
+                }
+        }
+}
+
+// --- search path from starting point to destination --- //
+
+function search()
+{
+        if(paths.length > 0)
+        {
+                // get the current path
+                var path = paths.shift();
+
+                // get the last station of the current path
+                var last = path[path.length - 1];
+
+                // check if the last station is the desired destination
+                if(last === to)
+                {
+                        // show the solution
+                        print("<hr>");
+                        print(path.join(" > "));
+                        print("<hr>");
+                }
+                // try to extend path from last station
+                else
+                {
+                        // get next edges from our last stations
+                        var nextstations = edges[last];
+
+                        // run throug all edges 
+                        for(var i = 0; i < nextstations.length; i++)
+                        {
+                                // get the next station we can reach from the last station
+                                var nextstation = nextstations[i];
+
+                                // check that we did not already pass the next station
+                                if(path.indexOf(nextstation) < 0)
+                                {
+                                        // create a copy of the current path
+                                        var newpath = path.slice();
+
+                                        // add the next station to the new path
+                                        newpath.push(nextstation);
+
+                                        // add the new path to the list of paths
+                                        paths.push(newpath);
+                                }
+                        }
+                }
+
+                // keep on searching
+                setTimeout(search,0);
+        }
+        else
+        {
+                print("done");
+        }
+}
+
+function run()
+{
+        from = document.getElementById("from").value;
+        to = document.getElementById("to").value;
+        paths = [[from]];
+
+        clear();
+        search();
+}
+
+function print(x)
+{
+        document.getElementById("print").innerHTML += "<br>" + x;
+}
+
+function clear()
+{
+        document.getElementById("print").innerHTML = "";
+}
+
+</script>
+</head>
+<body>
+From: <input type="text" id="from"></input><br>
+To: <input type="text" id="to"></input><br>
+<button onclick="run()">Search</button>
+<div id="print"></div>
+</body>
+</html>
