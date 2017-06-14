@@ -1,0 +1,47 @@
+<html>
+<head>
+<meta charset="UTF-8">
+
+<!-- set viewport to fix scale on smartphones-->
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<script>
+
+// russian lowercase (йцукенгшщзхъфывапролджэячсмитьбю)
+var russian = {"a":"а","b":"б","c":"ц","d":"д","e":"e","f":"ф","g":"г",
+"h":"х","i":"и","j":"й","k":"к","l":"л","m":"м","n":"н","o":"о","p":"п",
+"q":"к","r":"р","s":"с","t":"т","u":"у","v":"в","w":"в","x":"кс","y":"и",
+"z":"з"," ":" "};
+
+// add russian lowercase as uppercase
+for(var x in russian)
+{
+	russian[x.toUpperCase()] = russian[x].toUpperCase();
+}
+
+// called whenever the input changes
+function change()
+{
+	// get the input text
+	var input = document.getElementById("input").value;
+
+	// convert to output text
+	var output = input.split("").map((x) => russian[x]).join("");
+
+	// show output
+	show(output);
+}
+
+// show output
+function show(x)
+{
+	document.getElementById("output").innerHTML = x;
+}
+
+</script>
+</head>
+<body>
+<input type="text" id="input" width="100%" onkeyup="change()"></input>
+<br>
+<div id="output"></div>
+</body>
+</html>
